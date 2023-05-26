@@ -9,4 +9,4 @@ galsim.o: quicksort.c
 	gcc -c quicksort.c $(LDFLAGS)
 
 clean:
-	rm -f *.o
+	rm -f quicksort *.o

@@ -3,6 +3,8 @@
 #include <time.h>
 #include <stdbool.h>
 
+// Source: https://www.youtube.com/watch?v=WprjBK0p6rw&ab_channel=CuriousWalk
+
 int* createUnsortedArray(int size, int max){
     int* array = (int*)malloc(sizeof(int)*size);
     srand(time(NULL));
@@ -18,7 +20,55 @@ int* createUnsortedArray(int size, int max){
     return array;
 }
 
-int* sort(int* array, int size){
+void swap(int* x, int* y)
+{
+    // Store value in temporary integer.
+    int temp = *x;
+    // Set the value of x with the value of y.
+    *x = *y;
+    // Use the temporary value to set value of y.
+    *y = temp;
+}
+
+void sort_partition(int* array, int start, int stop){
+    if (stop-start <= 1){
+        return;
+    }
+
+    int toSwap = start-1;
+    int pivot = array[stop-1];
+    for (int i = start; i < stop; i++){
+        if (array[i] <= pivot){
+            toSwap = toSwap + 1;
+            if (i > toSwap){
+                swap(&array[i], &array[toSwap]);
+            }
+        }
+    }
+
+    sort_partition(array, 0, toSwap);
+    sort_partition(array, toSwap, stop);
+}
+
+int* global_sort(int* array, int size){
+    if (size == 1){
+        return array;
+    }
+
+    int pivot = array[size-1];
+    int toSwap = -1;
+    for (int i = 0; i < size; i++){
+        if (array[i] <= pivot){
+            toSwap = toSwap + 1;
+            if (i > toSwap){
+                swap(&array[i], &array[toSwap]);
+            }
+        }
+    }
+
+    sort_partition(array, 0, toSwap);
+    sort_partition(array, toSwap, size);
+
     return array;
 }
 
@@ -36,18 +86,33 @@ int main(int argc, char *argv[])
 
     // If array is static, then used pre-set values, otherwise do it fully random of size 'size' and maximum possible value 'max'.
     if (stat){
-        size = 17;
-        max = 531;
-        array = (int[]){1,32,6,41,6,278,43,365,7,53,2,531,7,98,3,6,467};
+        size = 10;
+        max = 9;
+        array = (int[]){3,2,5,0,1,8,7,6,9,4};
     }
     else{
        array = createUnsortedArray(size, max);
     }
 
+    for (int i = 0; i < size; i++){
+        printf("%d, ", array[i]);
+    }
+    printf("\n");
+    printf("\n");
+
     // Make the call to sort the array:
-    int sorted = sort(array, size);
+    printf("PIVOT: %d\n", array[size-1]);
+    printf("\n");
+    int* sorted = global_sort(array, size);
+
+    for (int i = 0; i < size; i++){
+        printf("%d, ", sorted[i]);
+    }
+    printf("\n");
 
     // Unallocated unused memory.
-    free(array);
+    if (!stat){
+        free(array);
+    }
     return 0;
 }
