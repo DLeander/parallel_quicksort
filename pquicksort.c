@@ -16,40 +16,29 @@ typedef struct tInfo {
    int splitpoint;
 } tInfo_t;
 
-// Compare function used for qsort.
-int cmpfunc (const void * a, const void * b) {
-   return ( *(int*)a - *(int*)b );
-}
-
-static volatile int* groupCount;
-static volatile int* groupState;
+// static volatile int* groupCount;
+// static volatile int* groupState;
 
 // Not used, showed worse performance compared to omp barrier.
-volatile void specBarrier(int groupSize) {
-    int thread = omp_get_thread_num();
-    int group = thread / groupSize;
-    int mystate;
-    #pragma omp critical
-    {
-        mystate = groupState[group];
-        groupCount[group]++;
-        if (groupCount[group] == groupSize) {
-        groupCount[group] = 0;
-        groupState[group] = 1 - mystate;
-        }
-    }
-    while (mystate == groupState[group]);
-}
+// volatile void specBarrier(int groupSize) {
+//     int thread = omp_get_thread_num();
+//     int group = thread / groupSize;
+//     int mystate;
+//     #pragma omp critical
+//     {
+//         mystate = groupState[group];
+//         groupCount[group]++;
+//         if (groupCount[group] == groupSize) {
+//         groupCount[group] = 0;
+//         groupState[group] = 1 - mystate;
+//         }
+//     }
+//     while (mystate == groupState[group]);
+// }
 
-void createUnsortedArray(int* array, int* test, const int size, const int max){
-    srand(time(NULL));
-
-    // Add randomized element to both arrays.
-    for (int i = 0; i < size; i++){
-        int val = rand() % max;
-        array[i] = val;
-        test[i] = val;
-    }
+// Compare function used for qsort.
+int cmpfunc(const void * a, const void * b) {
+   return ( *(int*)a - *(int*)b );
 }
 
 void createChunks(int* array, const int size, tInfo_t* threadInfo, const int nThreads){
@@ -242,7 +231,7 @@ void global_sort(tInfo_t* threadInfo, const int groupSize, const int nThreads, i
 }
 
 
-void setup_sort(int* array, const int size, const int nThreads){
+void pqsort(int* array, const int size, const int nThreads){
     if (size == 1){
         return;
     }
@@ -283,53 +272,4 @@ void setup_sort(int* array, const int size, const int nThreads){
     }
     free(pivots);
     free(threadInfo);
-}
-
-int main(int argc, char *argv[])
-{   
-    if (argc != 4){
-        printf("Incorrect number of arguments, correct: Array Size, Max Randomized Number, Number of Threads.\n");
-        return 0;
-    }
-    // Gather neccessary information about array to be sorted.
-    int size = atoi(argv[1]);
-    int max = atoi(argv[2]);
-    int nThreads = atoi(argv[3]);
-
-    int* array = (int*)malloc(sizeof(int)*size);
-    int* test = (int*)malloc(sizeof(int)*size);
-    createUnsortedArray(array, test, size, max);
-
-    groupCount = (int*)calloc(nThreads, sizeof(int));
-    groupState = (int*)calloc(nThreads, sizeof(int));
-    // memset(groupCount, 0, sizeof(int)*nThreads);
-
-    // Sort array using C library, used for testing that the final array is actually sorted.
-    qsort(test, size, sizeof(int), cmpfunc);
-
-    // Time execution of sorting the array.
-    double start; 
-    double end; 
-    start = omp_get_wtime();
-
-    setup_sort(array, size, nThreads);
-
-    end = omp_get_wtime();
-    printf("%f seconds\n", end - start);
-
-    // Check with library sort if the sorting was indeed correct.
-    bool sorted = true;
-    for (int i = 0; i < size; i++){
-        if (test[i] != array[i]){
-            printf("\nNot sorted correctly..\n");
-            sorted = false;
-            break;
-        }
-    }
-    if (sorted) printf("Sorted Correctly.\n");
-
-    // Unallocated unused memory.
-    free(array);
-    free(test);
-    return 0;
 }

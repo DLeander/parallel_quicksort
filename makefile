@@ -1,12 +1,15 @@
 CFLAGS=-Wall -fopenmp -g
-INCLUDES=-I/opt/X11/include
-LDFLAGS=-L/opt/X11/lib -lX11 -lm -O3 -g -ffast-math -march=native -fopt-info-vec
+LDFLAGS=-lm -O3 -ffast-math -march=native -fopt-info-vec
+INCLUDES=-I.
 
-quicksort: quicksort.o
-	gcc $(CFLAGS) $(INCLUDES) -o quicksort quicksort.o $(LDFLAGS)
+test: test.o pquicksort.o
+	gcc $(CFLAGS) -o test test.o pquicksort.o $(LDFLAGS)
 
-quicksort.o: quicksort.c
-	gcc -c quicksort.c $(CFLAGS) $(INCLUDES)
+pquicksort.o: pquicksort.c pquicksort.h
+	gcc -c pquicksort.c $(CFLAGS) $(INCLUDES)
+
+test.o: test.c pquicksort.h
+	gcc -c test.c $(CFLAGS) $(INCLUDES)
 
 clean:
-	rm -f quicksort *.o
+	rm -f test *.o
